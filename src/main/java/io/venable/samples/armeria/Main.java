@@ -14,6 +14,7 @@ public class Main {
         final ServerBuilder serverBuilder = Server.builder();
         return serverBuilder.http(port)
                 .service("/", (ctx, req) -> HttpResponse.of("Hello, Armeria!"))
+                .decorator(CopyDecorator.newDecorator())
                 .annotatedService("/echo", new EchoService())
                 .build();
     }
