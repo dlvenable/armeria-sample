@@ -1,4 +1,4 @@
-package io.venable.samples.armeria;
+package io.venable.samples.armeria.http;
 
 import com.linecorp.armeria.common.AggregatedHttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
