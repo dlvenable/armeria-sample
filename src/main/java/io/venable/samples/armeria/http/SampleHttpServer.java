@@ -37,4 +37,7 @@ public class SampleHttpServer {
         return new SampleHttpServer(server);
     }
 
+    void shutdown() {
+        server.stop();
+    }
 }
