@@ -87,7 +87,7 @@ public class MutualTLSTest {
     }
 
     @Test
-    void GET_without_client_certificate_throws() {
+    void GET_with_unknown_client_certificate_throws() {
         final ClientFactory clientFactory = ClientFactory.builder()
                 .tlsCustomizer(sslContextBuilder -> sslContextBuilder.trustManager(
                         new File("src/test/resources/cert.pem")
@@ -113,7 +113,33 @@ public class MutualTLSTest {
     }
 
     @Test
-    void GET_with_unknown_client_certificate_throws() {
+    void GET_with_known_client_certificate_but_incorrect_key_throws() {
+        final ClientFactory clientFactory = ClientFactory.builder()
+                .tlsCustomizer(sslContextBuilder -> sslContextBuilder.trustManager(
+                        new File("src/test/resources/cert.pem")
+                ))
+                .tlsCustomizer(sslContextBuilder -> sslContextBuilder.keyManager(
+                        new File("src/test/resources/cert.pem"),
+                        new File("src/test/resources/alt-key.pem")
+                ))
+                .build();
+        webClient = WebClient
+                .builder("https://localhost:8443")
+                .factory(clientFactory)
+                .build();
+
+        final HttpResponse echoResponse = webClient.get("/");
+
+        final CompletableFuture<AggregatedHttpResponse> aggregate = echoResponse.aggregate();
+
+        final ExecutionException actual = assertThrows(ExecutionException.class, aggregate::get);
+
+        assertThat(actual.getCause(), instanceOf(UnprocessedRequestException.class));
+        assertThat(actual.getCause().getCause(), instanceOf(SSLHandshakeException.class));
+    }
+
+    @Test
+    void GET_without_client_certificate_throws() {
         final ClientFactory clientFactory = ClientFactory.builder()
                 .tlsCustomizer(sslContextBuilder -> sslContextBuilder.trustManager(
                         new File("src/test/resources/cert.pem")
