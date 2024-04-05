@@ -27,7 +27,7 @@ public class SampleHttpServer {
     public static SampleHttpServer createServer() {
         final Server server = newServer(8080);
 
-        server.closeOnJvmShutdown();
+        //server.closeOnJvmShutdown();
 
         server.start().join();
 
