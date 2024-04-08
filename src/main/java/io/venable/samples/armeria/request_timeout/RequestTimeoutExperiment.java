@@ -1,5 +1,6 @@
 package io.venable.samples.armeria.request_timeout;
 
+import com.linecorp.armeria.common.AggregatedHttpRequest;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
 import com.linecorp.armeria.common.HttpStatus;
@@ -11,6 +12,7 @@ import com.linecorp.armeria.server.ServerBuilder;
 import com.linecorp.armeria.server.ServerErrorHandler;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.SimpleDecoratingHttpService;
+import com.linecorp.armeria.server.annotation.Post;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +48,8 @@ public class RequestTimeoutExperiment {
     private static Server newServer(final int port) {
         final ServerBuilder serverBuilder = Server.builder();
         return serverBuilder.http(port)
-                .service("/test", (ctx, req) -> HttpResponse.of("Hello, Armeria!"))
+                //.service("/test", (ctx, req) -> HttpResponse.of("Hello, Armeria!"))
+                .annotatedService("/test", new MyService())
                 .errorHandler(new CustomServerErrorHandler())
                 .decorator(SimpleDecorator.newDecorator())
                 .requestTimeout(Duration.of(5, ChronoUnit.SECONDS))
@@ -98,6 +101,13 @@ public class RequestTimeoutExperiment {
                 return HttpResponse.of(HttpStatus.REQUEST_TIMEOUT);
             }
             return HttpResponse.of(HttpStatus.SERVICE_UNAVAILABLE);
+        }
+    }
+
+    private static class MyService {
+        @Post
+        public HttpResponse doPost(final ServiceRequestContext serviceRequestContext, final AggregatedHttpRequest aggregatedHttpRequest) throws Exception {
+            return HttpResponse.of("Hello, Armeria!");
         }
     }
 }
