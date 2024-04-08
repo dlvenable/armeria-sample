@@ -3,9 +3,12 @@ package io.venable.samples.armeria.request_timeout;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
 import com.linecorp.armeria.common.HttpStatus;
+import com.linecorp.armeria.common.annotation.Nullable;
 import com.linecorp.armeria.server.HttpService;
+import com.linecorp.armeria.server.RequestTimeoutException;
 import com.linecorp.armeria.server.Server;
 import com.linecorp.armeria.server.ServerBuilder;
+import com.linecorp.armeria.server.ServerErrorHandler;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.SimpleDecoratingHttpService;
 import org.slf4j.Logger;
@@ -44,6 +47,7 @@ public class RequestTimeoutExperiment {
         final ServerBuilder serverBuilder = Server.builder();
         return serverBuilder.http(port)
                 .service("/test", (ctx, req) -> HttpResponse.of("Hello, Armeria!"))
+                .errorHandler(new CustomServerErrorHandler())
                 .decorator(SimpleDecorator.newDecorator())
                 .requestTimeout(Duration.of(5, ChronoUnit.SECONDS))
                 .build();
@@ -78,8 +82,22 @@ public class RequestTimeoutExperiment {
                     return HttpResponse.of(HttpStatus.REQUEST_TIMEOUT);
                 }
 
-                return HttpResponse.of(HttpStatus.ACCEPTED);
+                try {
+                    return unwrap().serve(ctx, aggregatedHttpRequest.toHttpRequest());
+                } catch (Exception e) {
+                    return HttpResponse.of(HttpStatus.SERVICE_UNAVAILABLE);
+                }
             }));
+        }
+    }
+
+    private static class CustomServerErrorHandler implements ServerErrorHandler {
+        @Override
+        public @Nullable HttpResponse onServiceException(ServiceRequestContext ctx, Throwable cause) {
+            if(cause instanceof RequestTimeoutException) {
+                return HttpResponse.of(HttpStatus.REQUEST_TIMEOUT);
+            }
+            return HttpResponse.of(HttpStatus.SERVICE_UNAVAILABLE);
         }
     }
 }
