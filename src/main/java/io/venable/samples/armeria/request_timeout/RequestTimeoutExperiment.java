@@ -50,7 +50,7 @@ public class RequestTimeoutExperiment {
         return serverBuilder.http(port)
                 //.service("/test", (ctx, req) -> HttpResponse.of("Hello, Armeria!"))
                 .annotatedService("/test", new MyService())
-                .errorHandler(new CustomServerErrorHandler())
+                //.errorHandler(new CustomServerErrorHandler())
                 .decorator(SimpleDecorator.newDecorator())
                 .requestTimeout(Duration.of(5, ChronoUnit.SECONDS))
                 .build();
