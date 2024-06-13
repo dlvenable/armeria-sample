@@ -57,7 +57,7 @@ public class RequestTimeoutExperiment {
                 // TODO: Remove the following line to get the 408 that we'd expect.
                 .decorator(ThrottlingService.newDecorator(ThrottlingStrategy.rateLimiting(10.0), new CustomThrottlingRejectHandler()))
                 .annotatedService("/test", new MyService())
-                .errorHandler(new CustomServerErrorHandler())
+                //.errorHandler(new CustomServerErrorHandler())
                 //.requestTimeout(Duration.of(5, ChronoUnit.SECONDS))
                 .build();
     }
